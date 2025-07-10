@@ -1,1 +1,1 @@
-from functions.functions import get_files_info
+from functions.functions import get_files_info, get_file_content
