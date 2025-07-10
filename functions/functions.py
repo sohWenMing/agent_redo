@@ -50,16 +50,17 @@ def check_is_dir(path):
    
 def list_dir_entries(path):
     entries = os.listdir(path)
-    return_string = "Results for current directory:"
+    return_string = "Results for current directory:\n"
     for entry in entries:
-        return_string += map_entry(entry)
+        full_path = os.path.join(path, entry)
+        return_string += map_entry(full_path)
     return return_string
 
 def map_entry(entry):
     is_dir = os.path.isdir(entry)
     file_size = os.path.getsize(entry)
     base_name = os.path.basename(entry)
-    return f"{base_name}: file_size={file_size}, is_dir={is_dir}"
+    return f"{base_name}: file_size={file_size}, is_dir={is_dir}\n"
 
 
 
