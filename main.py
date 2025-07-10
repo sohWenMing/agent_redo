@@ -5,22 +5,23 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pprint import pprint
-from argument_parsing import get_arg_from_sys_argv
+from argument_parsing import parse_flags, get_arg_from_sys_argv, check_verbose_flag
 from loading import load_binary
 
 def main():
+
+
     gemini_api_key = get_api_key()
     # print("gemini_api_key: ", gemini_api_key)
     client = genai.Client(api_key=gemini_api_key)
     
+    is_verbose = check_verbose_flag()
     # prompt = types.Part.from_text(text=get_arg_from_user())
-    text_part = types.Part.from_text(text="What is actually being shown in this image")
+    user_prompt = get_arg_from_sys_argv()
+    text_part = types.Part.from_text(text=user_prompt)
 
-    image = load_binary("./test_dog.jpg")
-    image_part = types.Part.from_bytes(data=image, mime_type="image/jpeg")
-    content  = types.Content(role="user", parts=[text_part,
-                                                image_part
-                                                ])
+    # image = load_binary("./test_dog.jpg")
+    content  = types.Content(role="user", parts=[text_part])
 
     model = "gemini-2.0-flash-001"
 
@@ -28,12 +29,20 @@ def main():
         model=model,
         contents=[content]
     )
-    print("response: ", response.text)
-    print("##### usage metadata #####")
-    pprint(response.usage_metadata.__dict__)
 
-    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-    print("Response tokens:", response.usage_metadata.candidates_token_count)
+    # candidate = response.candidates[0]
+    # candidate_content = candidate.content
+    # print("##### candidate content #####")
+    # pprint(candidate_content.__dict__)
+
+
+    print("response: ", response.text)
+    # print("##### usage metadata #####")
+    # pprint(response.usage_metadata.__dict__)
+    if is_verbose:  
+        print("User prompt:", user_prompt)
+        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+        print("Response tokens:", response.usage_metadata.candidates_token_count)
 
 
 ########### Functions called in main program ###########
