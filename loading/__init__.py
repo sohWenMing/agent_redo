@@ -1,0 +1,1 @@
+from loading.loading import load_binary
