@@ -1,5 +1,4 @@
 import os
-from config import agent_config
 
 def get_files_info(working_directory, directory=None):
     path_to_is_safe = __check_path_safe(working_directory, directory)
@@ -21,13 +20,30 @@ def get_file_content(working_directory, file_path):
         return str(path_to_is_safe.error)
     
     is_file_result = __check_is_file(path_to_is_safe.path)
-    if not is_file_result.is_safe:
+    if not is_file_result.is_file:
         return str(is_file_result.error)
-    return __read_file_num_bytes(path_to_is_safe.path, num_bytes=agent_config.max_chars)
+    return __read_file_num_bytes(path_to_is_safe.path)
 
- 
+def write_file(working_directory, file_path, content):
+    path_to_is_safe = __check_path_safe(working_directory, file_path, is_for_dir=False)
+
+    if not path_to_is_safe.is_safe:
+        return str(path_to_is_safe.error)
+    
+    complete_path = path_to_is_safe.path
+    
+    if os.path.exists(complete_path):
+        return __try_write_file(complete_path, content)
+    
+    else:
+        file_path_dirname = os.path.dirname(file_path)
+
+        if file_path_dirname != "":
+            os.makedirs(os.path.dirname(file_path_dirname))
+        return __try_write_file(complete_path, content)
+
 ########### Private functions ###########
-def __check_path_safe(working_directory, directory):
+def __check_path_safe(working_directory, path, is_for_dir=True):
     class PathToIsSafe():
         def __init__(self, path, is_safe, error=None):
             self.path = path 
@@ -38,8 +54,8 @@ def __check_path_safe(working_directory, directory):
         work_dir_abs_path = os.path.abspath(working_directory)
         # this will build out an absolute path, starting from /
 
-        if directory != None:
-            full_path = os.path.join(working_directory, directory)
+        if path != None:
+            full_path = os.path.join(working_directory, path)
             # joins the paths, if there are redundancies will remove
         else:
             full_path = working_directory
@@ -47,7 +63,10 @@ def __check_path_safe(working_directory, directory):
         full_abs_path = os.path.abspath(full_path)
 
         if not full_abs_path.startswith(work_dir_abs_path):
-           raise ValueError(f'Error: Cannot list "{directory}" as it is outside the permitted working directory')
+            if is_for_dir:
+                raise ValueError(f'Error: Cannot list "{path}" as it is outside the permitted working directory')
+            else:
+                raise ValueError(f'Error: Cannot write to "{path}" as it is outside the permitted working directory')
         return PathToIsSafe(full_abs_path, True)
 
     except Exception as e:
@@ -74,9 +93,9 @@ def __map_entry(entry):
 
 def __check_is_file(file_path):
     class IsFileResult():
-        def __init__(self, path, is_safe, error=None):
+        def __init__(self, path, is_file, error=None):
             self.path = path 
-            self.is_safe = is_safe
+            self.is_file = is_file
             self.error = error
     try:
         if os.path.isfile(file_path):
@@ -108,5 +127,17 @@ def __read_file_num_bytes(file_path, num_bytes=10000, mode="r"):
         return f'Error: "{e}"'
         
 
+def __try_write_file(path, content):
+    try:
+        if os.path.exists(path):
+            is_file = __check_is_file(path)
+            if not is_file.is_file:
+                return str(is_file.error)
+        else:
+            with open(path, "w") as f:
+                f.write(content)
+                return f'Successfully wrote to "{path}" ({len(content)} characters written)'
+    except Exception as e:
+        return f'Error:  {e}'
 
 

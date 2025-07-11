@@ -1,7 +1,6 @@
 import unittest
-from functions import get_files_info, get_file_content
+from functions import get_files_info, get_file_content, write_file
 import os
-from config import agent_config
 
 class TestFunctions(unittest.TestCase):
     def test_get_files_info(self):
@@ -63,7 +62,39 @@ class TestFunctions(unittest.TestCase):
             if test.isExpectErr:
                 self.assertEqual(test.expectedErrMsg, result) 
             else:
-                self.assertLessEqual(len(result), agent_config.max_chars)
+                self.assertLessEqual(len(result), 10000)
             
+    def test_write_file(self):
+        class Test():
+            def __init__(self,
+                         working_directory,
+                         file_path, content,
+                         isExpectErr,
+                         expectedErrMsg):
+                self.working_directory = working_directory
+                self.file_path = file_path
+                self.content = content
+                self.isExpectErr = isExpectErr
+                self.expectedErrMsg = expectedErrMsg
+
+        tests = [
+            Test(".", "test.txt", "this is the test content", False, None),
+            Test(".", "../test.txt", "this is the test content", True, 
+                 f'Error: Cannot write to "../test.txt" as it is outside the permitted working directory')
+        ]
+
+        for test in tests:
+            result = write_file(test.working_directory, test.file_path, test.content)
+            print("result: ", result)
+            if not test.isExpectErr:
+                full_path = os.path.join(os.path.abspath(test.working_directory), test.file_path)
+                with open(full_path, "r") as f:
+                    data = f.read()
+                    self.assertEqual(test.content, str(data))
+                os.remove(full_path) 
+            else:
+                self.assertEqual(test.expectedErrMsg, result)
+
+
 if __name__ == "__main__":
     unittest.main()
