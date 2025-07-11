@@ -1,5 +1,11 @@
 import os
 
+class PathToIsSafe():
+    def __init__(self, path, is_safe, error=None):
+        self.path = path 
+        self.is_safe = is_safe
+        self.error = error
+
 def get_files_info(working_directory, directory=None):
     path_to_is_safe = __check_path_safe(working_directory, directory)
 
@@ -26,7 +32,6 @@ def get_file_content(working_directory, file_path):
 
 def write_file(working_directory, file_path, content):
     path_to_is_safe = __check_path_safe(working_directory, file_path, is_for_dir=False)
-
     if not path_to_is_safe.is_safe:
         return str(path_to_is_safe.error)
     
@@ -37,18 +42,14 @@ def write_file(working_directory, file_path, content):
     
     else:
         file_path_dirname = os.path.dirname(file_path)
-
         if file_path_dirname != "":
-            os.makedirs(os.path.dirname(file_path_dirname))
+            full_dir_path = os.path.join(os.path.abspath(working_directory), file_path_dirname)
+            if not os.path.exists(full_dir_path):
+                os.makedirs(os.path.dirname(full_dir_path))
         return __try_write_file(complete_path, content)
 
 ########### Private functions ###########
 def __check_path_safe(working_directory, path, is_for_dir=True):
-    class PathToIsSafe():
-        def __init__(self, path, is_safe, error=None):
-            self.path = path 
-            self.is_safe = is_safe
-            self.error = error
 
     try:
         work_dir_abs_path = os.path.abspath(working_directory)
@@ -133,10 +134,9 @@ def __try_write_file(path, content):
             is_file = __check_is_file(path)
             if not is_file.is_file:
                 return str(is_file.error)
-        else:
-            with open(path, "w") as f:
-                f.write(content)
-                return f'Successfully wrote to "{path}" ({len(content)} characters written)'
+        with open(path, "w") as f:
+            f.write(content)
+            return f'Successfully wrote to "{path}" ({len(content)} characters written)'
     except Exception as e:
         return f'Error:  {e}'
 
