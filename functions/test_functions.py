@@ -1,5 +1,10 @@
 import unittest
-from functions import get_files_info, get_file_content, write_file
+from functions import (
+    get_files_info, 
+    get_file_content, 
+    write_file, 
+    run_python_file
+)
 import os
 
 class TestFunctions(unittest.TestCase):
@@ -95,6 +100,29 @@ class TestFunctions(unittest.TestCase):
             else:
                 self.assertEqual(test.expectedErrMsg, result)
 
+    def test_run_python_file(self):
+        class Test():
+            def __init__(self,
+                         working_directory,
+                         file_path, 
+                         isExpectErr,
+                         expectedErrMsg):
+                self.working_directory = working_directory
+                self.file_path = file_path
+                self.isExpectErr = isExpectErr
+                self.expectedErrMsg = expectedErrMsg
+        
+        tests = [
+            Test(".", "../calculator/main.py", True,
+                f'Error: Cannot execute "../calculator/main.py" as it is outside the permitted working directory'),
+            Test(".", "shouldfail.py", True, f'Error: File "shouldfail.py" not found.'),
+            Test("../", "calculator/package/lorem.txt", True, f'Error: file "calculator/package/lorem.txt" not found.')
+        ]
+
+        for test in tests:
+            result = run_python_file(test.working_directory, test.file_path)
+            if test.isExpectErr:
+                self.assertEqual(test.expectedErrMsg, result)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,13 @@
 import os
+from enum import Enum
+import subprocess
+
+class CheckIsSafeType(Enum):
+    DIR = "dir"
+    WRITEFILE = "file"
+    EXEC = "exec"
+
+
 
 class PathToIsSafe():
     def __init__(self, path, is_safe, error=None):
@@ -31,7 +40,7 @@ def get_file_content(working_directory, file_path):
     return __read_file_num_bytes(path_to_is_safe.path)
 
 def write_file(working_directory, file_path, content):
-    path_to_is_safe = __check_path_safe(working_directory, file_path, is_for_dir=False)
+    path_to_is_safe = __check_path_safe(working_directory, file_path, checkType=CheckIsSafeType.WRITEFILE)
     if not path_to_is_safe.is_safe:
         return str(path_to_is_safe.error)
     
@@ -43,13 +52,59 @@ def write_file(working_directory, file_path, content):
     else:
         file_path_dirname = os.path.dirname(file_path)
         if file_path_dirname != "":
+            # if there was actually a prefix dirname, before the actual file 
             full_dir_path = os.path.join(os.path.abspath(working_directory), file_path_dirname)
             if not os.path.exists(full_dir_path):
+                # only create the directory if the path does not already exist, if not will throw error
                 os.makedirs(os.path.dirname(full_dir_path))
         return __try_write_file(complete_path, content)
 
+
+def run_python_file(working_directory, file_path):
+    path_to_is_safe = __check_path_safe(working_directory, file_path, checkType=CheckIsSafeType.EXEC)
+    if not path_to_is_safe.is_safe:
+        return str(path_to_is_safe.error)
+    if not os.path.exists(path_to_is_safe.path):
+        return f'Error: File "{file_path}" not found.'
+    if not str.endswith(file_path, ".py"):
+        return f'Error:"{file_path} is not a Python file.'
+    
+    try:
+        completed_process = subprocess.run(path_to_is_safe.path, capture_output=True, timeout=30)
+
+        returned_stdout = completed_process.stdout
+        returned_stderr = completed_process.stderr
+
+        returned_string = completed_process_get_return_string(completed_process, returned_stdout, returned_stderr)
+        return returned_string
+
+    except Exception as e:
+        return f"Error: executing Python file: {e}"
+
+def completed_process_get_return_string(completed_process, returned_stdout, returned_stderr):
+    returned_string = ""
+    returned_string += f'STDOUT: {returned_stdout}\n'
+    returned_string += f'STDERR: {returned_stderr}\n'
+
+    if completed_process.returncode != 0:
+        returned_string += f'Process exited wide code {completed_process.returncode}'
+        
+    if (returned_stdout == "" or returned_stdout == None) and (returned_stderr == "" or returned_stderr == None):
+        returned_string += "No output produced"
+    return returned_string
+
+    # try:
+    #     sub
+    # except Exception as e:
+    #     return f'Error: executing Python file: {e}'
+
+
+
+
+
+
 ########### Private functions ###########
-def __check_path_safe(working_directory, path, is_for_dir=True):
+def __check_path_safe(working_directory, path, checkType=CheckIsSafeType.DIR):
 
     try:
         work_dir_abs_path = os.path.abspath(working_directory)
@@ -64,10 +119,12 @@ def __check_path_safe(working_directory, path, is_for_dir=True):
         full_abs_path = os.path.abspath(full_path)
 
         if not full_abs_path.startswith(work_dir_abs_path):
-            if is_for_dir:
+            if checkType==CheckIsSafeType.DIR:
                 raise ValueError(f'Error: Cannot list "{path}" as it is outside the permitted working directory')
-            else:
+            elif checkType==CheckIsSafeType.WRITEFILE:
                 raise ValueError(f'Error: Cannot write to "{path}" as it is outside the permitted working directory')
+            elif checkType==CheckIsSafeType.EXEC:
+                raise ValueError(f'Error: Cannot execute "{path}" as it is outside the permitted working directory')
         return PathToIsSafe(full_abs_path, True)
 
     except Exception as e:
