@@ -70,13 +70,7 @@ def run_python_file(working_directory, file_path):
         return f'Error:"{file_path} is not a Python file.'
     
     try:
-        completed_process = subprocess.run(path_to_is_safe.path, capture_output=True, timeout=30)
-
-        returned_stdout = completed_process.stdout
-        returned_stderr = completed_process.stderr
-
-        returned_string = completed_process_get_return_string(completed_process, returned_stdout, returned_stderr)
-        return returned_string
+        return __run_subprocess_get_output(path_to_is_safe.path)
 
     except Exception as e:
         return f"Error: executing Python file: {e}"
@@ -102,8 +96,15 @@ def completed_process_get_return_string(completed_process, returned_stdout, retu
 
 
 
-
 ########### Private functions ###########
+def __run_subprocess_get_output(path):
+        completed_process = subprocess.run(path, capture_output=True, timeout=30)
+
+        returned_stdout = completed_process.stdout
+        returned_stderr = completed_process.stderr
+
+        returned_string = completed_process_get_return_string(completed_process, returned_stdout, returned_stderr)
+        return returned_string
 def __check_path_safe(working_directory, path, checkType=CheckIsSafeType.DIR):
 
     try:
