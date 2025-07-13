@@ -61,6 +61,10 @@ def write_file(working_directory, file_path, content):
 
 
 def run_python_file(working_directory, file_path):
+    print("working directory: ", working_directory)
+    print("file path: ", file_path)
+    # REMINDER: for this to work with variadic functions, will need to accept that the list passed in must require
+    # the first argument 
     path_to_is_safe = __check_path_safe(working_directory, file_path, checkType=CheckIsSafeType.EXEC)
     if not path_to_is_safe.is_safe:
         return str(path_to_is_safe.error)
@@ -81,7 +85,7 @@ def completed_process_get_return_string(completed_process, returned_stdout, retu
     returned_string += f'STDERR: {returned_stderr}\n'
 
     if completed_process.returncode != 0:
-        returned_string += f'Process exited wide code {completed_process.returncode}'
+        returned_string += f'Process exited with code {completed_process.returncode}'
         
     if (returned_stdout == "" or returned_stdout == None) and (returned_stderr == "" or returned_stderr == None):
         returned_string += "No output produced"
@@ -97,14 +101,17 @@ def completed_process_get_return_string(completed_process, returned_stdout, retu
 
 
 ########### Private functions ###########
-def __run_subprocess_get_output(path):
-        completed_process = subprocess.run(path, capture_output=True, timeout=30)
+def __run_subprocess_get_output(args):
+        completed_process = subprocess.run(args, capture_output=True, timeout=30)
+
+        # args can either be a single string, or a list of strings
 
         returned_stdout = completed_process.stdout
         returned_stderr = completed_process.stderr
 
         returned_string = completed_process_get_return_string(completed_process, returned_stdout, returned_stderr)
         return returned_string
+        
 def __check_path_safe(working_directory, path, checkType=CheckIsSafeType.DIR):
 
     try:

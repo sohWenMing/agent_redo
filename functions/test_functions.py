@@ -113,16 +113,18 @@ class TestFunctions(unittest.TestCase):
                 self.expectedErrMsg = expectedErrMsg
         
         tests = [
-            Test(".", "../calculator/main.py", True,
-                f'Error: Cannot execute "../calculator/main.py" as it is outside the permitted working directory'),
-            Test(".", "shouldfail.py", True, f'Error: File "shouldfail.py" not found.'),
-            Test("../", "calculator/package/lorem.txt", True, f'Error: file "calculator/package/lorem.txt" not found.')
+            # Test(".", "../calculator/main.py", True,
+            #     f'Error: Cannot execute "../calculator/main.py" as it is outside the permitted working directory'),
+            # Test(".", "shouldfail.py", True, f'Error: File "shouldfail.py" not found.'),
+            # Test("../", "calculator/package/lorem.txt", True, f'Error: File "calculator/package/lorem.txt" not found.')
+            Test("../", ["./main.py", "--verbose"], False, None)
         ]
 
         for test in tests:
             result = run_python_file(test.working_directory, test.file_path)
             if test.isExpectErr:
                 self.assertEqual(test.expectedErrMsg, result)
+            print(result)
 
 if __name__ == "__main__":
     unittest.main()

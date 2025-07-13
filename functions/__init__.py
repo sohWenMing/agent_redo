@@ -1,1 +1,2 @@
-from functions.functions import get_files_info, get_file_content, write_file, run_python_file
+from functions.functions import *
+from functions.function_declarations import *
