@@ -38,9 +38,10 @@ All paths you provide should be relative to the working directory. You do not ne
 
     model = "gemini-2.0-flash-001"
     is_functions_finished = False
+    num_iterations = 0
 
     try:
-        while is_functions_finished == False: 
+        while is_functions_finished == False and num_iterations <= 20: 
             response = gen_content(system_prompt, client, contents, model)
             """
             The sequence of events would be:
@@ -53,16 +54,23 @@ All paths you provide should be relative to the working directory. You do not ne
 
             function_calls = response.function_calls
 
-            if function_calls != None:
+            if response.text == None:
                 candidates = response.candidates
                 for candidate in candidates:
                     contents.append(candidate.content)
+
+                    """
+                    it's important to understand that the context for an interaction with the LLM isn't just what it actually ended up doing 
+                    but also all the possible candidates for interaction that the LLM COULD have ended up taking. More often, we would take 
+                    the first, which is the best one, but it's good to know all the potentialities, and then add them to the conversation.
+                    """
 
                 for function_call in function_calls:
                     result = call_function(function_call, is_verbose)
                     contents.append(result)
                     # function_call_response = result.parts[0].function_response.response
                     # print(f"-> {function_call_response}")
+                num_iterations += 1
             else:
                 is_functions_finished = True
                 print("response: ", response.text)
