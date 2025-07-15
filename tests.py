@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import unittest
 from functions import *
 
@@ -26,7 +27,7 @@ class TestFunction(unittest.TestCase):
     #     print("result: ", result)
 
     def test_exec_file_1(self):
-        result = run_python_file("calculator", "main.py")
+        result = run_python_file("calculator", ["main.py", "--verbose"])
         print("result1: ",result)
         result = run_python_file("calculator", "tests.py")
         print("result2: ",result)

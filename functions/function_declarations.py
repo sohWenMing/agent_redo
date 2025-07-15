@@ -65,10 +65,26 @@ schema_run_python_file = declare_genai_function("run_python_file",
                                                        )
                                                    }
                                                ))
+schema_write_python_file = declare_genai_function("write_file",
+                                               "Write to a python file based on passed in arguments",
+                                               types.Schema(
+                                                   type=types.Type.OBJECT,
+                                                   properties={
+                                                       "file_path": types.Schema(
+                                                           type=types.Type.STRING,
+                                                           description="The file that needs to be written to" 
+                                                       ),
+                                                       "content": types.Schema(
+                                                           type=types.Type.STRING,
+                                                           description="The content that needs to be written to the file in file_path"
+                                                       )
+                                                   }
+                                               ))
 available_functions = types.Tool(
     function_declarations=[
         schema_get_files_info,
         schema_get_file_content,
-        schema_run_python_file
+        schema_run_python_file,
+        schema_write_python_file
     ]
 )
